@@ -1,4 +1,4 @@
-/**
+/*/**
   Generated Main Source File
 
   Company:
@@ -40,34 +40,57 @@
     OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS 
     SOFTWARE.
 */
-
+#define LED_DATA LATCbits.LATC4  // Assuming RC4 is your LED data pin
 #include "mcc_generated_files/mcc.h"
-
+// Macro to send a bit 'b' (either 0 or 1) to the LED data pin
+#define send(b) LED_DATA = 1; NOP(); NOP(); NOP(); LED_DATA = b; NOP(); NOP(); NOP(); NOP(); LED_DATA = 0; NOP(); NOP(); NOP(); NOP();
 /*
                          Main application
  */
+void sendByte(unsigned char b);
+void sendRGB(unsigned char r, unsigned char g, unsigned char b);
+
+
 void main(void)
 {
     // Initialize the device
     SYSTEM_Initialize();
 
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts
-    // Use the following macros to:
-
-    // Enable the Global Interrupts
-    //INTERRUPT_GlobalInterruptEnable();
-
-    // Disable the Global Interrupts
-    //INTERRUPT_GlobalInterruptDisable();
-
     while (1)
     {
-        MPLAB_BLOWS
-        LEVILYONS
-                887
+                // Set the LED to Red
+        sendRGB(255, 0, 0);   // Red
+        __delay_ms(1000);     // Delay for 1 second
+ 
+        // Set the LED to Green
+        sendRGB(0, 255, 0);   // Green
+        __delay_ms(1000);     // Delay for 1 second
+ 
+        // Set the LED to Blue
+        sendRGB(0, 0, 255);   // Blue
+        __delay_ms(1000);     // Delay for 1 second
+        
+        sendRGB(0,0,0);
+        __delay_ms(1000);
+        
     }
 }
-/**
- End of File
-*/
+
+// Send out a byte 'b' in WS2812 protocol
+void sendByte(unsigned char b) {
+    if (b & 0b10000000) { send(1); } else { send(0); }
+    if (b & 0b01000000) { send(1); } else { send(0); }
+    if (b & 0b00100000) { send(1); } else { send(0); }
+    if (b & 0b00010000) { send(1); } else { send(0); }
+    if (b & 0b00001000) { send(1); } else { send(0); }
+    if (b & 0b00000100) { send(1); } else { send(0); }
+    if (b & 0b00000010) { send(1); } else { send(0); }
+    if (b & 0b00000001) { send(1); } else { send(0); }
+}
+
+// Send red, green, and blue values in WS2812 protocol
+void sendRGB(unsigned char r, unsigned char g, unsigned char b) {
+    sendByte(g);  // Send green first
+    sendByte(r);  // Then red
+    sendByte(b);  // Finally blue
+}
