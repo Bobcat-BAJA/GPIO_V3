@@ -49,17 +49,33 @@
  */
 void sendByte(unsigned char b);
 void sendRGB(unsigned char r, unsigned char g, unsigned char b);
-
+void get_button_state();
+enum dif_state {locked,semi,open,undefined};
+enum motor_direction{clockwise,counterclockwise,stop};
+void change_dif_state(enum dif_state new_state);
+enum dif_state get_top_dif_state();
+void run_motor(enum motor_direction mtr_dir);
 
 void main(void)
 {
-    // Initialize the device
+    run_motor(stop);
     SYSTEM_Initialize();
 
     while (1)
     {
-                // Set the LED to Red
-        sendRGB(255, 0, 0);   // Red
+        /*__delay_ms(50);
+        //get_button_state();
+        change_dif_state(open);
+        __delay_ms(3000);
+        change_dif_state(locked);
+        __delay_ms(3000);
+        change_dif_state(semi);
+        __delay_ms(3000);
+         */
+        __delay_ms(50);
+        get_button_state();
+        // Set the LED to Red
+        /*sendRGB(255, 0, 0);   // Red
         __delay_ms(1000);     // Delay for 1 second
  
         // Set the LED to Green
@@ -72,10 +88,97 @@ void main(void)
         
         sendRGB(0,0,0);
         __delay_ms(1000);
+         */
         
     }
 }
+void get_button_state(){
+    uint16_t convertedValue;
+    ADC_StartConversion(button);
+    while(!ADC_IsConversionDone());
+    convertedValue = ADC_GetConversionResult();
+    if(convertedValue <= 3010 && convertedValue >= 2300){
+        //sendRGB(255,0,0);
+        change_dif_state(semi); 
+        return;
+    }
+    else if(convertedValue > 3010){
+        //sendRGB(0,255,0);
+        change_dif_state(open);
+        return;
+    }
+    else if(convertedValue < 2300 && convertedValue > 1000){
+        //sendRGB(0,0,255);
+        change_dif_state(locked);
+        return;
+    }
+    else{
+        //sendRGB(0,0,0);
+        return;
+    }
+}
 
+void change_dif_state(enum dif_state new_state){
+    enum motor_direction mtr_dir;
+    enum dif_state start_state;
+    start_state = get_top_dif_state();
+    
+   // if(start_state == undefined){
+   //     return;
+    //}
+    
+    if(new_state == locked || (new_state == semi && start_state == open)){
+        mtr_dir = clockwise;
+    }else{
+        mtr_dir = counterclockwise;
+    }
+    while(get_top_dif_state() != new_state){
+       run_motor(mtr_dir); 
+    }
+    
+    run_motor(stop);
+    
+    
+}
+
+enum dif_state get_top_dif_state(){
+    if(dif4_GetValue() == 1 && dif3_GetValue() == 0 && dif1_GetValue() == 0){
+        sendRGB(0,255,0);
+        return open;
+    }
+    if(dif4_GetValue()==1 && dif3_GetValue()==1 && dif1_GetValue()==0){
+        sendRGB(0,0,255);
+        return semi;
+    }
+    if(dif4_GetValue()==0 && dif3_GetValue()==1 && dif1_GetValue()==1){
+        sendRGB(255,0,0);
+        return locked;
+    }
+    else{
+        sendRGB(0,0,0);
+        return undefined;
+    }
+                                                                             
+}
+
+void run_motor(enum motor_direction mtr_dir){
+    
+    switch(mtr_dir){
+        case stop:
+            mtr1_SetLow();
+            mtr2_SetLow();
+            return;
+        case clockwise:
+            mtr1_SetHigh();
+            mtr2_SetLow();
+            return;
+        case counterclockwise:
+            mtr1_SetLow();
+            mtr2_SetHigh();
+            return;
+
+    }
+}
 // Send out a byte 'b' in WS2812 protocol
 void sendByte(unsigned char b) {
     if (b & 0b10000000) { send(1); } else { send(0); }
