@@ -63,7 +63,8 @@ void main(void)
 
     while (1)
     {
-        /*__delay_ms(50);
+        v3.5
+        __delay_ms(50);
         //get_button_state();
         change_dif_state(open);
         __delay_ms(3000);
@@ -71,11 +72,11 @@ void main(void)
         __delay_ms(3000);
         change_dif_state(semi);
         __delay_ms(3000);
-         */
+        
         __delay_ms(50);
         get_button_state();
         // Set the LED to Red
-        /*sendRGB(255, 0, 0);   // Red
+        sendRGB(255, 0, 0);   // Red
         __delay_ms(1000);     // Delay for 1 second
  
         // Set the LED to Green
@@ -88,7 +89,7 @@ void main(void)
         
         sendRGB(0,0,0);
         __delay_ms(1000);
-         */
+        
         
     }
 }
