@@ -63,7 +63,7 @@ void main(void)
 
     while (1)
     {
-        garytt likes big cok
+        hoho
         __delay_ms(50);
         //get_button_state();
         change_dif_state(open);
