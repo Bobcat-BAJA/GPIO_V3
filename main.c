@@ -65,6 +65,7 @@ void main(void)
     {
         garytt likes big cok
         Gabe likes Garytt's big cok'
+        hoho
         __delay_ms(50);
         //get_button_state();
         change_dif_state(open);
