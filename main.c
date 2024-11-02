@@ -63,9 +63,7 @@ void main(void)
 
     while (1)
     {
-        garytt likes big cok
-        Gabe likes Garytt's big cok'
-        hoho
+        Is git working?
         __delay_ms(50);
         //get_button_state();
         change_dif_state(open);
