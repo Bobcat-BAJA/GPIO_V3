@@ -40,6 +40,7 @@
     OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS 
     SOFTWARE.
 */
+#define CAN_MESSAGE_ID 0x100   // Replace with your desired CAN 
 #define LED_DATA LATCbits.LATC4  // Assuming RC4 is your LED data pin
 #include "mcc_generated_files/mcc.h"
 // Macro to send a bit 'b' (either 0 or 1) to the LED data pin
@@ -76,8 +77,11 @@ void run_motor(enum motor_direction mtr_dir);
 // Function to run LED through test sequence
 void ledtest();
 
+//Function to send CAN data
+void sendArrayOverCAN(uint8_t* data_array, int data_array_length);
+
 void main(void) {
-    run_motor(stop);  // Stop the motor initially
+    run_motor(stop);  // Stop the motor 
     SYSTEM_Initialize();  // Initialize system
 
     while (1) {
@@ -94,6 +98,12 @@ void main(void) {
         
         // Run LED test sequence
         ledtest();
+        
+        uint8_t my_data[] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140};
+        int data_length = sizeof(my_data) / sizeof(my_data[0]);
+
+        // Call the function to send the array over CAN
+        sendArrayOverCAN(my_data, data_length);
     }
 }
 
@@ -200,4 +210,27 @@ void ledtest() {
     __delay_ms(1000);
     sendRGB(0, 0, 0);    // Off
     __delay_ms(1000);
+}
+
+void sendArrayOverCAN(uint8_t* data_array, int data_array_length) {
+    CAN_MSG_OBJ msg;  // CAN message object
+    msg.field.idType = CAN_FRAME_STD;  // Standard 11-bit identifier
+    msg.msgId = CAN_MESSAGE_ID;        // Set CAN message ID
+
+    // Loop through the array in 8-byte chunks
+    for (int i = 0; i < data_array_length; i += 8) {
+        // Load up to 8 bytes of data into the CAN message
+        for (int j = 0; j < 8 && (i + j) < data_array_length; j++) {
+            msg.data[j] = data_array[i + j];
+        }
+
+        // Set the data length code (dlc) for this frame
+        msg.field.dlc = (data_array_length - i < 8) ? (data_array_length - i) : 8;
+
+        // Send the CAN message using MCC's CAN_transmit function
+        if (CAN_transmit(&msg) != 0) { // Check for successful transmission
+            // Error handling if the message fails to send
+            // You could add a retry mechanism or log the error
+        }
+    }
 }
