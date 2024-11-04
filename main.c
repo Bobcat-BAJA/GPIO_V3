@@ -56,6 +56,8 @@ void change_dif_state(enum dif_state new_state);
 enum dif_state get_top_dif_state();
 void run_motor(enum motor_direction mtr_dir);
 
+//commit test 1
+
 void main(void)
 {
     run_motor(stop);
