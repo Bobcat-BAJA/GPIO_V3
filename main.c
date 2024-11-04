@@ -47,16 +47,33 @@
 /*
                          Main application
  */
+
+
+// Send out a byte 'b' in WS2812 protocol
 void sendByte(unsigned char b);
+
+// Send red, green, and blue values in WS2812 protocol
 void sendRGB(unsigned char r, unsigned char g, unsigned char b);
-void get_button_state();
+
+//Function For determining the state of the switch command
+void get_switch_state();
+
+//Function For determining the state of the switch command
 enum dif_state {locked,semi,open,undefined};
+
+
 enum motor_direction{clockwise,counterclockwise,stop};
+
+//Function that controls motor movement direction
 void change_dif_state(enum dif_state new_state);
+
+//Function for determining Diff State and For sending correct STATE Color to LED
 enum dif_state get_top_dif_state();
+
+//Function for controlling motor movement
 void run_motor(enum motor_direction mtr_dir);
 
-//commit test 1
+//commit test 2
 
 void main(void)
 {
@@ -65,9 +82,9 @@ void main(void)
 
     while (1)
     {
-        Is git working?
+     
         __delay_ms(50);
-        //get_button_state();
+        //get_switch_state();
         change_dif_state(open);
         __delay_ms(3000);
         change_dif_state(locked);
@@ -76,7 +93,7 @@ void main(void)
         __delay_ms(3000);
         
         __delay_ms(50);
-        get_button_state();
+        get_switch_state();
         // Set the LED to Red
         sendRGB(255, 0, 0);   // Red
         __delay_ms(1000);     // Delay for 1 second
@@ -95,7 +112,9 @@ void main(void)
         
     }
 }
-void get_button_state(){
+
+//Function For determining the state of the switch command
+void get_switch_state(){
     uint16_t convertedValue;
     ADC_StartConversion(button);
     while(!ADC_IsConversionDone());
@@ -121,6 +140,7 @@ void get_button_state(){
     }
 }
 
+//Function that controls motor movement direction
 void change_dif_state(enum dif_state new_state){
     enum motor_direction mtr_dir;
     enum dif_state start_state;
@@ -144,6 +164,7 @@ void change_dif_state(enum dif_state new_state){
     
 }
 
+//Function for determining Diff State and For sending correct STATE Color to LED
 enum dif_state get_top_dif_state(){
     if(dif4_GetValue() == 1 && dif3_GetValue() == 0 && dif1_GetValue() == 0){
         sendRGB(0,255,0);
@@ -164,6 +185,7 @@ enum dif_state get_top_dif_state(){
                                                                              
 }
 
+//Function for controlling motor movement and direction
 void run_motor(enum motor_direction mtr_dir){
     
     switch(mtr_dir){
@@ -182,6 +204,7 @@ void run_motor(enum motor_direction mtr_dir){
 
     }
 }
+
 // Send out a byte 'b' in WS2812 protocol
 void sendByte(unsigned char b) {
     if (b & 0b10000000) { send(1); } else { send(0); }
