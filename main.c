@@ -49,45 +49,39 @@
  */
 
 
-// Send out a byte 'b' in WS2812 protocol
+// Declaration to send a byte in WS2812 protocol
 void sendByte(unsigned char b);
 
-// Send red, green, and blue values in WS2812 protocol
+// Declaration to send red, green, and blue values in WS2812 protocol
 void sendRGB(unsigned char r, unsigned char g, unsigned char b);
 
-//Function For determining the state of the switch command
+// Function for determining the state of the switch command
 void get_switch_state();
 
-//Function For determining the state of the switch command
-enum dif_state {locked,semi,open,undefined};
+// Enum for differential states
+enum dif_state {locked, semi, open, undefined};
 
+// Enum for motor directions
+enum motor_direction {clockwise, counterclockwise, stop};
 
-enum motor_direction{clockwise,counterclockwise,stop};
-
-//Function that controls motor movement direction
+// Function to control motor movement direction based on differential state
 void change_dif_state(enum dif_state new_state);
 
-//Function for determining Diff State and For sending correct STATE Color to LED
+// Function for determining Diff State and sending correct color to LED
 enum dif_state get_top_dif_state();
 
-//Function for controlling motor movement
+// Function for controlling motor movement
 void run_motor(enum motor_direction mtr_dir);
 
-//Runs LED through test sequence
- void ledtest();
+// Function to run LED through test sequence
+void ledtest();
 
-//commit test 2
+void main(void) {
+    run_motor(stop);  // Stop the motor initially
+    SYSTEM_Initialize();  // Initialize system
 
-void main(void)
-{
-    run_motor(stop);
-    SYSTEM_Initialize();
-
-    while (1)
-    {
-     
+    while (1) {
         __delay_ms(50);
-        //get_switch_state();
         change_dif_state(open);
         __delay_ms(3000);
         change_dif_state(locked);
@@ -98,105 +92,86 @@ void main(void)
         __delay_ms(50);
         get_switch_state();
         
-        // Set the LED to Red
+        // Run LED test sequence
         ledtest();
-        
     }
 }
 
-//Function For determining the state of the switch command
-void get_switch_state(){
+// Function to determine the state of the switch using ADC
+void get_switch_state() {
     uint16_t convertedValue;
-    ADC_StartConversion(RA6);         // button got changed to RA6 ********
-    while(!ADC_IsConversionDone());
+    ADC_StartConversion(RA6);  // Start ADC conversion on pin RA6
+    while (!ADC_IsConversionDone());  // Wait for ADC conversion to finish
     convertedValue = ADC_GetConversionResult();
-    if(convertedValue <= 3010 && convertedValue >= 2300){
-        //sendRGB(255,0,0);
-        change_dif_state(semi); 
-        return;
-    }
-    else if(convertedValue > 3010){
-        //sendRGB(0,255,0);
-        change_dif_state(open);
-        return;
-    }
-    else if(convertedValue < 2300 && convertedValue > 1000){
-        //sendRGB(0,0,255);
-        change_dif_state(locked);
-        return;
-    }
-    else{
-        //sendRGB(0,0,0);
-        return;
+
+    // Set differential state based on ADC result ranges
+    if (convertedValue <= 3010 && convertedValue >= 2300) {
+        change_dif_state(semi);  // Semi state
+    } else if (convertedValue > 3010) {
+        change_dif_state(open);  // Open state
+    } else if (convertedValue < 2300 && convertedValue > 1000) {
+        change_dif_state(locked);  // Locked state
     }
 }
 
-//Function that controls motor movement direction
-void change_dif_state(enum dif_state new_state){
+// Function to control motor movement direction based on differential state
+void change_dif_state(enum dif_state new_state) {
     enum motor_direction mtr_dir;
-    enum dif_state start_state;
-    start_state = get_top_dif_state();
-    
-   // if(start_state == undefined){
-   //     return;
-    //}
-    
-    if(new_state == locked || (new_state == semi && start_state == open)){
+    enum dif_state start_state = get_top_dif_state();
+
+    // Set motor direction based on target and current state
+    if (new_state == locked || (new_state == semi && start_state == open)) {
         mtr_dir = clockwise;
-    }else{
+    } else {
         mtr_dir = counterclockwise;
     }
-    while(get_top_dif_state() != new_state){
-       run_motor(mtr_dir); 
+
+    // Run motor until target state is reached
+    while (get_top_dif_state() != new_state) {
+        run_motor(mtr_dir);
     }
-    
-    run_motor(stop);
-    
-    
+
+    run_motor(stop);  // Stop motor once in the desired state
 }
 
-//Function for determining Diff State and For sending correct STATE Color to LED
-enum dif_state get_top_dif_state(){
-    if(dif4_GetValue() == 1 && dif3_GetValue() == 0 && dif1_GetValue() == 0){
-        sendRGB(0,255,0);
+// Function to determine and display the current differential state
+enum dif_state get_top_dif_state() {
+    if (dif4_GetValue() == 1 && dif3_GetValue() == 0 && dif1_GetValue() == 0) {
+        sendRGB(0, 255, 0);  // Green for open
         return open;
     }
-    if(dif4_GetValue()==1 && dif3_GetValue()==1 && dif1_GetValue()==0){
-        sendRGB(0,0,255);
+    if (dif4_GetValue() == 1 && dif3_GetValue() == 1 && dif1_GetValue() == 0) {
+        sendRGB(0, 0, 255);  // Blue for semi
         return semi;
     }
-    if(dif4_GetValue()==0 && dif3_GetValue()==1 && dif1_GetValue()==1){
-        sendRGB(255,0,0);
+    if (dif4_GetValue() == 0 && dif3_GetValue() == 1 && dif1_GetValue() == 1) {
+        sendRGB(255, 0, 0);  // Red for locked
         return locked;
-    }
-    else{
-        sendRGB(0,0,0);
+    } else {
+        sendRGB(0, 0, 0);  // Off for undefined state
         return undefined;
     }
-                                                                             
 }
 
-//Function for controlling motor movement and direction
-void run_motor(enum motor_direction mtr_dir){
-    
-    switch(mtr_dir){
+// Function to control motor movement and direction
+void run_motor(enum motor_direction mtr_dir) {
+    switch (mtr_dir) {
         case stop:
             Mtr1_SetLow();
             Mtr2_SetLow();
-            return;
+            break;
         case clockwise:
             Mtr1_SetHigh();
             Mtr2_SetLow();
-            return;
+            break;
         case counterclockwise:
             Mtr1_SetLow();
             Mtr2_SetHigh();
-            return;
-
+            break;
     }
 }
 
-// Send out a byte 'b' in WS2812 protocol
+// Function to send out a byte 'b' in WS2812 protocol
 void sendByte(unsigned char b) {
     if (b & 0b10000000) { send(1); } else { send(0); }
     if (b & 0b01000000) { send(1); } else { send(0); }
@@ -208,20 +183,21 @@ void sendByte(unsigned char b) {
     if (b & 0b00000001) { send(1); } else { send(0); }
 }
 
-// Send red, green, and blue values in WS2812 protocol
+// Function to send red, green, and blue values in WS2812 protocol
 void sendRGB(unsigned char r, unsigned char g, unsigned char b) {
     sendByte(g);  // Send green first
     sendByte(r);  // Then red
     sendByte(b);  // Finally blue
 }
 
+// Function to run LED through test sequence
 void ledtest() {
-    sendRGB(255, 0, 0);
+    sendRGB(255, 0, 0);  // Red
     __delay_ms(1000);
-    sendRGB(0, 255, 0);
+    sendRGB(0, 255, 0);  // Green
     __delay_ms(1000);
-    sendRGB(0, 0, 255);
+    sendRGB(0, 0, 255);  // Blue
     __delay_ms(1000);
-    sendRGB(0, 0, 0);
+    sendRGB(0, 0, 0);    // Off
     __delay_ms(1000);
 }
