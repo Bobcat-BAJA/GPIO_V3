@@ -73,6 +73,9 @@ enum dif_state get_top_dif_state();
 //Function for controlling motor movement
 void run_motor(enum motor_direction mtr_dir);
 
+//Runs LED through test sequence
+ void ledtest();
+
 //commit test 2
 
 void main(void)
@@ -94,21 +97,9 @@ void main(void)
         
         __delay_ms(50);
         get_switch_state();
+        
         // Set the LED to Red
-        sendRGB(255, 0, 0);   // Red
-        __delay_ms(1000);     // Delay for 1 second
- 
-        // Set the LED to Green
-        sendRGB(0, 255, 0);   // Green
-        __delay_ms(1000);     // Delay for 1 second
- 
-        // Set the LED to Blue
-        sendRGB(0, 0, 255);   // Blue
-        __delay_ms(1000);     // Delay for 1 second
-        
-        sendRGB(0,0,0);
-        __delay_ms(1000);
-        
+        ledtest();
         
     }
 }
@@ -116,7 +107,7 @@ void main(void)
 //Function For determining the state of the switch command
 void get_switch_state(){
     uint16_t convertedValue;
-    ADC_StartConversion(button);
+    ADC_StartConversion(RA6);         // button got changed to RA6 ********
     while(!ADC_IsConversionDone());
     convertedValue = ADC_GetConversionResult();
     if(convertedValue <= 3010 && convertedValue >= 2300){
@@ -190,16 +181,16 @@ void run_motor(enum motor_direction mtr_dir){
     
     switch(mtr_dir){
         case stop:
-            mtr1_SetLow();
-            mtr2_SetLow();
+            Mtr1_SetLow();
+            Mtr2_SetLow();
             return;
         case clockwise:
-            mtr1_SetHigh();
-            mtr2_SetLow();
+            Mtr1_SetHigh();
+            Mtr2_SetLow();
             return;
         case counterclockwise:
-            mtr1_SetLow();
-            mtr2_SetHigh();
+            Mtr1_SetLow();
+            Mtr2_SetHigh();
             return;
 
     }
@@ -222,4 +213,15 @@ void sendRGB(unsigned char r, unsigned char g, unsigned char b) {
     sendByte(g);  // Send green first
     sendByte(r);  // Then red
     sendByte(b);  // Finally blue
+}
+
+void ledtest() {
+    sendRGB(255, 0, 0);
+    __delay_ms(1000);
+    sendRGB(0, 255, 0);
+    __delay_ms(1000);
+    sendRGB(0, 0, 255);
+    __delay_ms(1000);
+    sendRGB(0, 0, 0);
+    __delay_ms(1000);
 }
